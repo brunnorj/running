@@ -74,12 +74,8 @@
                 <p class="text-cyan-200 font-bold text-xl uppercase tracking-widest">KM percorridos</p>
             </div>
 
-            <div class="grid grid-cols-3 gap-4 mt-10 w-full border-t border-white/20 pt-8 bg-black/10 rounded-3xl pb-4">
-                <div class="text-center">
-                    <p class="text-3xl font-black tracking-tight drop-shadow-md text-pink-300" id="total-cal">0</p>
-                    <p class="text-[10px] text-white/70 uppercase font-black tracking-widest mt-1">Kcal Queimadas</p>
-                </div>
-                <div class="text-center border-x border-white/20">
+            <div class="grid grid-cols-2 gap-4 mt-10 w-full border-t border-white/20 pt-8 bg-black/10 rounded-3xl pb-4">
+                <div class="text-center border-r border-white/20">
                     <p class="text-3xl font-black tracking-tight drop-shadow-md text-yellow-300" id="total-time">0h</p>
                     <p class="text-[10px] text-white/70 uppercase font-black tracking-widest mt-1">Tempo Total</p>
                 </div>
@@ -502,7 +498,6 @@
                 data,
                 distancia: dist,
                 segundos: totalSegundos,
-                calorias: Math.round(dist * 75),
                 pace: (totalSegundos / 60) / dist
             };
 
@@ -541,11 +536,9 @@
 
         function renderizarDashboard() {
             const totalKm = corridas.reduce((acc, c) => acc + c.distancia, 0);
-            const totalCal = corridas.reduce((acc, c) => acc + c.calorias, 0);
             const totalSec = corridas.reduce((acc, c) => acc + c.segundos, 0);
             
             document.getElementById('total-km').innerText = totalKm.toFixed(2);
-            document.getElementById('total-cal').innerText = totalCal.toLocaleString();
             document.getElementById('total-time').innerText = Math.floor(totalSec / 3600) + 'h';
             document.getElementById('total-count').innerText = corridas.length;
         }
@@ -651,7 +644,6 @@
                             <div class="flex gap-6 text-[10px] text-slate-400 font-black uppercase tracking-widest">
                                 <span class="flex items-center gap-1.5"><i data-lucide="timer" class="w-3.5 h-3.5 text-cyan-500"></i> ${Math.floor(c.segundos/60)}m ${c.segundos%60}s</span>
                                 <span class="flex items-center gap-1.5"><i data-lucide="gauge" class="w-3.5 h-3.5 text-fuchsia-500"></i> ${min}:${sec.toString().padStart(2, '0')} <span class="text-slate-600">/km</span></span>
-                                <span class="flex items-center gap-1.5"><i data-lucide="flame" class="w-3.5 h-3.5 text-orange-500"></i> ${c.calorias} kcal</span>
                             </div>
                         </div>
                     </div>
