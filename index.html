@@ -286,6 +286,21 @@
         </div>
     </div>
 
+    <!-- MODAL DE EXCLUSÃO -->
+    <div id="modal-exclusao" class="fixed inset-0 bg-slate-900/90 z-[110] hidden items-center justify-center p-4 backdrop-blur-xl">
+        <div class="bg-slate-800 w-full max-w-sm rounded-[3rem] p-8 text-center border border-red-500/30 shadow-[0_0_50px_rgba(239,68,68,0.3)]">
+            <div class="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-6 border border-red-500/50">
+                <i data-lucide="trash-2" class="w-10 h-10 text-red-500"></i>
+            </div>
+            <h3 class="text-2xl font-black text-white mb-2 tracking-tighter">Excluir Atividade?</h3>
+            <p class="text-slate-400 text-[11px] font-bold mb-8 uppercase tracking-widest leading-relaxed">Essa ação não pode ser desfeita. A atividade será removida permanentemente.</p>
+            <div class="flex gap-4">
+                <button onclick="window.fecharModalExclusao()" class="flex-1 py-4 bg-slate-900 border border-slate-700 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-700 transition-all">Cancelar</button>
+                <button onclick="window.confirmarExclusao()" class="flex-[1.5] py-4 bg-gradient-to-r from-red-500 to-rose-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-[0_0_20px_rgba(239,68,68,0.4)] hover:scale-105 transition-all">Sim, Excluir</button>
+            </div>
+        </div>
+    </div>
+
     <script type="module">
         import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
@@ -293,6 +308,9 @@
         const supabaseConfig = savedSbConfig ? JSON.parse(savedSbConfig) : null;
         let supabase = null;
         let chartInstance = null;
+
+        // Controle de exclusão
+        let corridaParaExcluir = null;
 
         // SISTEMA DE USUÁRIOS INDEPENDENTES
         let usuarios = JSON.parse(localStorage.getItem('sampaio_users')) || [];
@@ -435,6 +453,38 @@
 
         window.fecharModal = () => {
             document.getElementById('modal-registro').style.display = 'none';
+        };
+
+        // LÓGICA DE EXCLUSÃO
+        window.abrirModalExclusao = (id) => {
+            corridaParaExcluir = id;
+            document.getElementById('modal-exclusao').style.display = 'flex';
+        };
+
+        window.fecharModalExclusao = () => {
+            corridaParaExcluir = null;
+            document.getElementById('modal-exclusao').style.display = 'none';
+        };
+
+        window.confirmarExclusao = async () => {
+            if (!corridaParaExcluir) return;
+
+            // Remover localmente
+            corridas = corridas.filter(c => c.id !== corridaParaExcluir);
+            localStorage.setItem(`corridas_v5_${usuarioAtualId}`, JSON.stringify(corridas));
+
+            // Remover do Supabase se estiver conectado
+            if (supabase) {
+                try {
+                    const { error } = await supabase.from('corridas').delete().eq('id', corridaParaExcluir);
+                    if (error) console.error("Erro ao excluir no Supabase:", error.message);
+                } catch (e) { 
+                    console.error("Cloud Error na exclusão:", e); 
+                }
+            }
+
+            atualizarInterface();
+            window.fecharModalExclusao();
         };
 
         window.salvarCorrida = async () => {
@@ -591,7 +641,12 @@
                                     <h4 class="font-black text-white text-2xl tracking-tighter">${c.distancia.toFixed(2)} <span class="text-xs text-slate-500 font-bold uppercase tracking-widest">km</span></h4>
                                     ${isPR ? '<span class="record-badge">PR Quebrado!</span>' : ''}
                                 </div>
-                                <span class="text-[9px] text-slate-500 font-black uppercase tracking-[0.2em] bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-700">${dataFormatada}</span>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-[9px] text-slate-500 font-black uppercase tracking-[0.2em] bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-700">${dataFormatada}</span>
+                                    <button onclick="window.abrirModalExclusao('${c.id}')" title="Excluir Atividade" class="p-1.5 bg-slate-900 text-red-500/70 hover:text-red-400 hover:bg-red-500/10 rounded-lg border border-slate-700 hover:border-red-500/30 transition-all opacity-60 hover:opacity-100">
+                                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                    </button>
+                                </div>
                             </div>
                             <div class="flex gap-6 text-[10px] text-slate-400 font-black uppercase tracking-widest">
                                 <span class="flex items-center gap-1.5"><i data-lucide="timer" class="w-3.5 h-3.5 text-cyan-500"></i> ${Math.floor(c.segundos/60)}m ${c.segundos%60}s</span>
