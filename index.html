@@ -174,39 +174,30 @@
             </div>
         </section>
 
-        <!-- ABA AJUSTES (FIREBASE) -->
+        <!-- ABA AJUSTES (SUPABASE) -->
         <section id="aba-ajustes" class="hidden space-y-6">
             <div class="bg-slate-800 p-8 rounded-[2.5rem] shadow-2xl border border-slate-700 relative overflow-hidden">
                 <div class="flex items-center gap-4 mb-8">
-                    <div class="bg-cyan-500/20 p-4 rounded-2xl border border-cyan-500/30 shadow-[0_0_20px_rgba(6,182,212,0.2)]"><i data-lucide="database" class="text-cyan-400 w-8 h-8"></i></div>
+                    <div class="bg-emerald-500/20 p-4 rounded-2xl border border-emerald-500/30 shadow-[0_0_20px_rgba(16,185,129,0.2)]"><i data-lucide="database" class="text-emerald-400 w-8 h-8"></i></div>
                     <div>
                         <h3 class="font-black text-white uppercase text-sm tracking-[0.2em]">Sincronização Cloud</h3>
-                        <p class="text-[10px] text-slate-400 font-bold mt-1 tracking-widest uppercase">Conecte seu Firebase (Privado)</p>
+                        <p class="text-[10px] text-slate-400 font-bold mt-1 tracking-widest uppercase">Conecte seu Banco Supabase</p>
                     </div>
                 </div>
                 
                 <div class="space-y-5">
                     <div>
-                        <label class="block text-[10px] font-black text-cyan-400 uppercase tracking-widest mb-2 ml-2">API Key</label>
-                        <input type="text" id="fb-apiKey" placeholder="AIzaSy..." class="w-full bg-slate-900 border-2 border-slate-700 text-white p-4 rounded-2xl focus:border-cyan-400 outline-none transition-all font-mono text-xs">
+                        <label class="block text-[10px] font-black text-emerald-400 uppercase tracking-widest mb-2 ml-2">Project URL</label>
+                        <input type="text" id="sb-url" placeholder="https://seudominio.supabase.co" class="w-full bg-slate-900 border-2 border-slate-700 text-white p-4 rounded-2xl focus:border-emerald-400 focus:shadow-[0_0_15px_rgba(16,185,129,0.2)] outline-none transition-all font-mono text-xs">
                     </div>
                     <div>
-                        <label class="block text-[10px] font-black text-cyan-400 uppercase tracking-widest mb-2 ml-2">Auth Domain</label>
-                        <input type="text" id="fb-authDomain" placeholder="seu-projeto.firebaseapp.com" class="w-full bg-slate-900 border-2 border-slate-700 text-white p-4 rounded-2xl focus:border-cyan-400 outline-none transition-all font-mono text-xs">
-                    </div>
-                    <div>
-                        <label class="block text-[10px] font-black text-cyan-400 uppercase tracking-widest mb-2 ml-2">Project ID</label>
-                        <input type="text" id="fb-projectId" placeholder="seu-projeto" class="w-full bg-slate-900 border-2 border-slate-700 text-white p-4 rounded-2xl focus:border-cyan-400 outline-none transition-all font-mono text-xs">
-                    </div>
-                    <div class="hidden">
-                        <input type="text" id="fb-storageBucket">
-                        <input type="text" id="fb-messagingSenderId">
-                        <input type="text" id="fb-appId">
+                        <label class="block text-[10px] font-black text-emerald-400 uppercase tracking-widest mb-2 ml-2">Anon / Public Key</label>
+                        <input type="text" id="sb-key" placeholder="eyJhbGciOiJIUzI1NiIsInR5c..." class="w-full bg-slate-900 border-2 border-slate-700 text-white p-4 rounded-2xl focus:border-emerald-400 focus:shadow-[0_0_15px_rgba(16,185,129,0.2)] outline-none transition-all font-mono text-xs">
                     </div>
                     
                     <div class="flex gap-4 mt-10 pt-6 border-t border-slate-700">
-                        <button onclick="window.limparFirebaseConfig(event)" class="flex-1 py-5 text-red-500 border border-red-500/30 font-black text-xs uppercase tracking-widest hover:bg-red-500/10 rounded-2xl transition-all">Desconectar</button>
-                        <button onclick="window.salvarFirebaseConfig(event)" class="flex-[2] bg-gradient-to-r from-cyan-500 to-blue-600 text-white py-5 rounded-2xl font-black shadow-[0_10px_25px_rgba(6,182,212,0.4)] hover:scale-[1.02] transition-all uppercase text-xs tracking-[0.2em]">Salvar e Conectar</button>
+                        <button onclick="window.limparSupabaseConfig(event)" class="flex-1 py-5 text-red-500 border border-red-500/30 font-black text-xs uppercase tracking-widest hover:bg-red-500/10 rounded-2xl transition-all">Desconectar</button>
+                        <button onclick="window.salvarSupabaseConfig(event)" class="flex-[2] bg-gradient-to-r from-emerald-500 to-green-600 text-white py-5 rounded-2xl font-black shadow-[0_10px_25px_rgba(16,185,129,0.4)] hover:scale-[1.02] transition-all uppercase text-xs tracking-[0.2em]">Salvar e Conectar</button>
                     </div>
                 </div>
             </div>
@@ -296,19 +287,18 @@
     </div>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
-        const savedFbConfig = localStorage.getItem('corrida_pro_fb_config');
-        const firebaseConfig = savedFbConfig ? JSON.parse(savedFbConfig) : null;
-        let db = null;
+        const savedSbConfig = localStorage.getItem('sampaio_supabase_config');
+        const supabaseConfig = savedSbConfig ? JSON.parse(savedSbConfig) : null;
+        let supabase = null;
         let chartInstance = null;
 
         // SISTEMA DE USUÁRIOS INDEPENDENTES
         let usuarios = JSON.parse(localStorage.getItem('sampaio_users')) || [];
         let usuarioAtualId = localStorage.getItem('sampaio_current_user') || null;
 
-        // Migração de Segurança: Garante que haja pelo menos 1 usuário
+        // Migração de Segurança
         if (usuarios.length === 0) {
             const defaultUser = { id: 'user_' + Date.now(), nome: 'Atleta Principal' };
             usuarios.push(defaultUser);
@@ -316,25 +306,23 @@
             localStorage.setItem('sampaio_users', JSON.stringify(usuarios));
             localStorage.setItem('sampaio_current_user', usuarioAtualId);
 
-            // Resgata corridas antigas caso o usuário esteja atualizando a versão
             const oldData = JSON.parse(localStorage.getItem('corridas_v5'));
             if (oldData && oldData.length > 0) {
                 localStorage.setItem(`corridas_v5_${usuarioAtualId}`, JSON.stringify(oldData));
             }
         }
 
-        // Carrega as corridas EXCLUSIVAS do usuário logado
+        // Carrega as corridas
         let corridas = JSON.parse(localStorage.getItem(`corridas_v5_${usuarioAtualId}`)) || [];
 
-        // Conexão Cloud
-        if (firebaseConfig && firebaseConfig.apiKey) {
+        // Conexão Supabase
+        if (supabaseConfig && supabaseConfig.url && supabaseConfig.key) {
             try {
-                const app = initializeApp(firebaseConfig);
-                db = getFirestore(app);
-                document.getElementById('cloud-status').innerHTML = '<i data-lucide="cloud" class="w-4 h-4 text-white"></i> <span class="text-[10px] font-bold text-white uppercase tracking-widest hidden sm:inline">Cloud Sync ON</span>';
+                supabase = createClient(supabaseConfig.url, supabaseConfig.key);
+                document.getElementById('cloud-status').innerHTML = '<i data-lucide="cloud" class="w-4 h-4 text-white"></i> <span class="text-[10px] font-bold text-white uppercase tracking-widest hidden sm:inline">Supabase ON</span>';
                 document.getElementById('cloud-status').classList.replace('bg-black/30', 'bg-gradient-to-r');
-                document.getElementById('cloud-status').classList.add('from-green-500', 'to-emerald-600', 'border-none', 'shadow-[0_0_15px_rgba(16,185,129,0.5)]');
-            } catch (e) { console.warn("Firebase Setup Ignored:", e); }
+                document.getElementById('cloud-status').classList.add('from-emerald-500', 'to-green-600', 'border-none', 'shadow-[0_0_15px_rgba(16,185,129,0.5)]');
+            } catch (e) { console.warn("Supabase Setup Ignored:", e); }
         }
 
         window.abrirModalUsuarios = () => {
@@ -362,10 +350,7 @@
         window.selecionarUsuario = (id) => {
             usuarioAtualId = id;
             localStorage.setItem('sampaio_current_user', id);
-            
-            // Troca o "banco de dados" local para a chave deste usuário
             corridas = JSON.parse(localStorage.getItem(`corridas_v5_${id}`)) || [];
-            
             atualizarInterface();
             window.fecharModalUsuarios();
         };
@@ -407,43 +392,38 @@
         };
 
         window.carregarConfiguracoesNaTela = () => {
-            if (firebaseConfig) {
-                document.getElementById('fb-apiKey').value = firebaseConfig.apiKey || '';
-                document.getElementById('fb-authDomain').value = firebaseConfig.authDomain || '';
-                document.getElementById('fb-projectId').value = firebaseConfig.projectId || '';
+            if (supabaseConfig) {
+                document.getElementById('sb-url').value = supabaseConfig.url || '';
+                document.getElementById('sb-key').value = supabaseConfig.key || '';
             }
         };
 
-        window.salvarFirebaseConfig = (event) => {
+        window.salvarSupabaseConfig = (event) => {
             const btn = event.target;
             const originalText = btn.innerText;
 
             const config = {
-                apiKey: document.getElementById('fb-apiKey').value.trim(),
-                authDomain: document.getElementById('fb-authDomain').value.trim(),
-                projectId: document.getElementById('fb-projectId').value.trim(),
-                storageBucket: document.getElementById('fb-projectId').value.trim() + '.firebasestorage.app',
-                messagingSenderId: '',
-                appId: ''
+                url: document.getElementById('sb-url').value.trim(),
+                key: document.getElementById('sb-key').value.trim()
             };
             
-            if (!config.apiKey) {
-                btn.innerText = "API Key Obrigatória!";
+            if (!config.url || !config.key) {
+                btn.innerText = "Campos Obrigatórios!";
                 btn.classList.add('from-red-500', 'to-red-600');
                 setTimeout(() => { btn.innerText = originalText; btn.classList.remove('from-red-500', 'to-red-600'); }, 2000);
                 return;
             }
 
-            localStorage.setItem('corrida_pro_fb_config', JSON.stringify(config));
+            localStorage.setItem('sampaio_supabase_config', JSON.stringify(config));
             btn.innerText = "Conectando...";
-            btn.classList.replace('from-cyan-500', 'from-green-500');
-            btn.classList.replace('to-blue-600', 'to-emerald-600');
+            btn.classList.replace('from-emerald-500', 'from-green-500');
+            btn.classList.replace('to-green-600', 'to-emerald-600');
             setTimeout(() => window.location.reload(), 1000);
         };
 
-        window.limparFirebaseConfig = (event) => {
+        window.limparSupabaseConfig = (event) => {
             const btn = event.target;
-            localStorage.removeItem('corrida_pro_fb_config');
+            localStorage.removeItem('sampaio_supabase_config');
             btn.innerText = "Desconectando...";
             setTimeout(() => window.location.reload(), 1000);
         };
@@ -476,16 +456,17 @@
                 pace: (totalSegundos / 60) / dist
             };
 
-            // Salva na array e no LocalStorage EXCLUSIVO deste usuário
+            // Salva Local
             corridas.unshift(novaCorrida);
             localStorage.setItem(`corridas_v5_${usuarioAtualId}`, JSON.stringify(corridas));
 
-            // Salva no Firebase identificando de qual usuário é o treino
-            if (db) {
+            // Salva Supabase
+            if (supabase) {
                 try { 
                     novaCorrida.userId = usuarioAtualId;
                     novaCorrida.userName = usuarios.find(u => u.id === usuarioAtualId)?.nome || 'Unknown';
-                    await addDoc(collection(db, "corridas"), novaCorrida); 
+                    const { error } = await supabase.from('corridas').insert([novaCorrida]);
+                    if (error) console.error("Erro no Supabase:", error.message);
                 } 
                 catch (e) { console.error("Cloud Error:", e); }
             }
@@ -499,7 +480,6 @@
         };
 
         function atualizarInterface() {
-            // Atualiza o nome exibido no topo
             const userAtivo = usuarios.find(u => u.id === usuarioAtualId);
             if(userAtivo) document.getElementById('nome-usuario-ativo').innerText = userAtivo.nome;
 
